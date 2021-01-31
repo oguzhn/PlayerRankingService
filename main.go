@@ -5,6 +5,8 @@ import (
 
 	"github.com/gorilla/handlers"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/oguzhn/PlayerRankingService/business"
+	"github.com/oguzhn/PlayerRankingService/controller"
 
 	"context"
 	"log"
@@ -35,9 +37,11 @@ func main() {
 	var wg sync.WaitGroup
 	ctx, cancel := context.WithCancel(context.Background())
 
-	restController := controller.NewController()
+	businessLayer := business.NewBusiness()
+
+	restController := controller.NewController(businessLayer)
 	r := http.NewServeMux()
-	r.Handle("/", restController.Handlers())
+	r.Handle("/", restController.RegisterHandlers())
 
 	server := &http.Server{
 		Addr: conf.Addr,
