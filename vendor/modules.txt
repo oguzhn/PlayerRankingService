@@ -1,0 +1,17 @@
+# github.com/felixge/httpsnoop v1.0.1
+github.com/felixge/httpsnoop
+# github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8
+## explicit
+github.com/globalsign/mgo
+github.com/globalsign/mgo/bson
+github.com/globalsign/mgo/internal/json
+github.com/globalsign/mgo/internal/sasl
+github.com/globalsign/mgo/internal/scram
+# github.com/gorilla/handlers v1.5.1
+## explicit
+github.com/gorilla/handlers
+# github.com/kelseyhightower/envconfig v1.4.0
+## explicit
+github.com/kelseyhightower/envconfig
+# gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
+## explicit
