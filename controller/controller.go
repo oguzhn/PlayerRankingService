@@ -113,8 +113,23 @@ func (c *Controller) GetUserById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	guid := vars["user_guid"]
 
+	err := models.IsValidGuid(guid)
+	if err != nil {
+		log.Printf("Invalid GUID: err: %s\n", err)
+		http.Error(w,
+			http.StatusText(http.StatusBadRequest),
+			http.StatusBadRequest)
+		return
+	}
 	rs, err := c.app.GetUserById(guid)
 	if err != nil {
+		if err == models.ErrNotFound {
+			log.Printf("User not found: err: %s\n", err)
+			http.Error(w,
+				http.StatusText(http.StatusNotFound),
+				http.StatusNotFound)
+			return
+		}
 		log.Printf("Failed to load user detail: err: %s\n", err)
 		http.Error(w,
 			http.StatusText(http.StatusInternalServerError),

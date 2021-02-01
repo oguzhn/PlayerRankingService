@@ -1,0 +1,21 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch",
+            "type": "go",
+            "request": "launch",
+            "program": "${fileDirname}/../",
+            "env": {
+                "RANKING_MONGO_ADDR":"localhost:27017",
+                "RANKING_MONGO_DB":"RankingDb",
+                "RANKING_MONGO_COL":"Players",
+                "RANKING_ADDR":":8080",
+
+            },
+        }
+    ]
+}

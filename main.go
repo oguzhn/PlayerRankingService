@@ -7,6 +7,7 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/oguzhn/PlayerRankingService/business"
 	"github.com/oguzhn/PlayerRankingService/controller"
+	"github.com/oguzhn/PlayerRankingService/database"
 
 	"context"
 	"log"
@@ -34,10 +35,14 @@ func main() {
 		envconfig.Usage(envPrefix, &conf)
 		log.Fatalln("cannot parse env vars:", err)
 	}
+	mongoclient, err := database.NewDatastore(conf.Mongo.Addr, conf.Mongo.DB, conf.Mongo.Col)
+	if err != nil {
+		log.Fatalln("cannot reach mongodb", err)
+	}
 	var wg sync.WaitGroup
 	ctx, cancel := context.WithCancel(context.Background())
 
-	businessLayer := business.NewBusiness()
+	businessLayer := business.NewBusiness(mongoclient)
 
 	restController := controller.NewController(businessLayer)
 	r := http.NewServeMux()
