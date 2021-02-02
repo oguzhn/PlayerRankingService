@@ -33,6 +33,9 @@ func (cl *MongoClient) CreateUser(u *UserDAO) error {
 }
 
 func (cl *MongoClient) GetUserById(id string) (*UserDAO, error) {
+	if id == "" {
+		return nil, nil
+	}
 	session := cl.ms.Copy()
 	defer session.Close()
 	collection := session.DB(cl.dbName).C(cl.colName)

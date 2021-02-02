@@ -25,6 +25,7 @@ func (c *Controller) RegisterHandlers() http.Handler {
 	router.Path("/score/submit").Methods(http.MethodPost).HandlerFunc(c.SubmitScore)
 	router.Path("/user/profile/{user_guid}").Methods(http.MethodGet).HandlerFunc(c.GetUserById)
 	router.Path("/user/create").Methods(http.MethodPost).HandlerFunc(c.CreateUser)
+	router.Path("/user/create/bulk").Methods(http.MethodPost).HandlerFunc(c.CreateUserBulk)
 	return router
 }
 
@@ -178,6 +179,41 @@ func (c *Controller) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(user)
+	if err != nil {
+		log.Printf("Failed to load marshal data: %v, err: %s\n", r, err)
+	}
+}
+
+func (c *Controller) CreateUserBulk(w http.ResponseWriter, r *http.Request) {
+	var bulkUsers models.BulkUserDTO
+	err := json.NewDecoder(r.Body).Decode(&bulkUsers)
+	if err != nil {
+		log.Printf("Failed to decode json form: %+v, err: %s\n", r.Body, err)
+		http.Error(w,
+			http.StatusText(http.StatusBadRequest),
+			http.StatusBadRequest)
+		return
+	}
+	var savedUsers models.BulkUserDTO
+	for i := 0; i < bulkUsers.Count; i++ {
+		if err := bulkUsers.List[i].IsValid(); err == nil {
+
+			if err = c.app.CreateUser(bulkUsers.List[i]); err == nil {
+				savedUsers.List = append(savedUsers.List, bulkUsers.List[i])
+				savedUsers.Count++
+			}
+		}
+	}
+	if savedUsers.Count == 0 {
+		log.Printf("Failed to save data: %v, err: %s\n", r, err)
+
+		http.Error(w,
+			http.StatusText(http.StatusInternalServerError),
+			http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(savedUsers)
 	if err != nil {
 		log.Printf("Failed to load marshal data: %v, err: %s\n", r, err)
 	}

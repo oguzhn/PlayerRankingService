@@ -100,6 +100,7 @@ func (b *Business) AddScore(score models.ScoreDTO) error {
 			} else {
 				parent.RightID = user.LeftID
 				parent.RightCount--
+				b.decrementUpperNodesRightCount(parent)
 			}
 			err = b.handler.UpdateUser(parent)
 			if err != nil {
@@ -111,13 +112,68 @@ func (b *Business) AddScore(score models.ScoreDTO) error {
 			} else {
 				parent.RightID = user.RightID
 				parent.RightCount--
+				b.decrementUpperNodesRightCount(parent)
 			}
 			err = b.handler.UpdateUser(parent)
 			if err != nil {
 				return err
 			}
 		} else {
-			//
+			if !isLeftChild {
+				parent.RightID = user.RightID
+				parent.RightCount--
+				b.decrementUpperNodesRightCount(parent)
+			} else {
+				parent.LeftID = user.RightID
+			}
+			err = b.handler.UpdateUser(parent)
+			if err != nil {
+				return err
+			}
+			userRight, err := b.handler.GetUserById(user.RightID)
+			if err != nil {
+				return err
+			}
+			left := userRight.LeftID
+			userRight.LeftID = user.LeftID
+			err = b.handler.UpdateUser(userRight)
+			if err != nil {
+				log.Println("could not update user ", err)
+				return err
+			}
+
+			leftUser, err := b.handler.GetUserById(left)
+			if err != nil {
+				return err
+			}
+
+			usersLeft, err := b.handler.GetUserById(user.LeftID)
+			if err != nil {
+				return err
+			}
+
+			count, err := b.countNumberOfNodes(leftUser)
+			if err != nil {
+				return err
+			}
+
+			for usersLeft.RightID != "" {
+				usersLeft.RightCount += count
+				err = b.handler.UpdateUser(usersLeft)
+				if err != nil {
+					return err
+				}
+				usersLeft, err = b.handler.GetUserById(usersLeft.RightID)
+				if err != nil {
+					return err
+				}
+			}
+			usersLeft.RightCount += count
+			usersLeft.RightID = left
+			err = b.handler.UpdateUser(usersLeft)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -133,6 +189,9 @@ func (b *Business) AddScore(score models.ScoreDTO) error {
 	})
 }
 
+func (b *Business) decrementUpperNodesRightCount(user *database.UserDAO) error {
+	return nil
+}
 func (b *Business) countNumberOfNodes(root *database.UserDAO) (int, error) {
 	if root == nil || root.ID == "" {
 		return 0, nil

@@ -16,6 +16,11 @@ type UserDTO struct {
 
 type UserDTOList []UserDTO
 
+type BulkUserDTO struct {
+	Count int         `json:"count"`
+	List  UserDTOList `json:"users"`
+}
+
 type ScoreDTO struct {
 	Score     float32 `json:"score_worth"`
 	ID        string  `json:"user_id"`
