@@ -190,6 +190,26 @@ func (b *Business) AddScore(score models.ScoreDTO) error {
 }
 
 func (b *Business) decrementUpperNodesRightCount(user *database.UserDAO) error {
+	root, err := b.handler.GetRoot()
+	if err != nil {
+		return err
+	}
+	p := root
+	for p.ID != user.ID {
+		if user.Score >= p.Score {
+			p.RightCount--
+			b.handler.UpdateUser(p)
+			p, err = b.handler.GetUserById(p.RightID)
+			if err != nil {
+				return err
+			}
+		} else {
+			p, err = b.handler.GetUserById(p.LeftID)
+			if err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
 func (b *Business) countNumberOfNodes(root *database.UserDAO) (int, error) {
