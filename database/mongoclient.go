@@ -2,6 +2,7 @@ package database
 
 import "github.com/globalsign/mgo"
 
+/*MongoClient is a mongo client which has a session, database name and collection name*/
 type MongoClient struct {
 	ms      *mgo.Session
 	dbName  string
@@ -17,6 +18,7 @@ func NewDatastore(con string, db string, collection string) (*MongoClient, error
 	return &MongoClient{ms, db, collection}, nil
 }
 
+/*UpdateUser is simply updates a given user*/
 func (cl *MongoClient) UpdateUser(u *UserDAO) error {
 	session := cl.ms.Copy()
 	defer session.Close()
@@ -25,6 +27,7 @@ func (cl *MongoClient) UpdateUser(u *UserDAO) error {
 	return collection.UpdateId(u.ID, u)
 }
 
+/*CreateUser simply creates a new user*/
 func (cl *MongoClient) CreateUser(u *UserDAO) error {
 	session := cl.ms.Copy()
 	defer session.Close()
@@ -32,7 +35,8 @@ func (cl *MongoClient) CreateUser(u *UserDAO) error {
 	return collection.Insert(u)
 }
 
-func (cl *MongoClient) GetUserById(id string) (*UserDAO, error) {
+/*GetUserByID simply gets the user for given id*/
+func (cl *MongoClient) GetUserByID(id string) (*UserDAO, error) {
 	if id == "" {
 		return nil, nil
 	}
@@ -44,12 +48,17 @@ func (cl *MongoClient) GetUserById(id string) (*UserDAO, error) {
 	return &user, err
 }
 
+/*
+GetRoot get the root of Binary search tree. It first finds the id of the root
+which is written on the mongo document with id specified in rootID constant variable.
+Then it fetches the user with that id.
+*/
 func (cl *MongoClient) GetRoot() (*UserDAO, error) {
 	session := cl.ms.Copy()
 	defer session.Close()
 	collection := session.DB(cl.dbName).C(cl.colName)
 	var root UserDAO
-	err := collection.FindId(rootId).One(&root)
+	err := collection.FindId(rootID).One(&root)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			return nil, nil //root does not exist so it is not an error
@@ -68,23 +77,29 @@ func (cl *MongoClient) GetRoot() (*UserDAO, error) {
 	return &root, err
 }
 
+/*
+SetRoot sets the root for given id. It first checks if root exists then it sets it.
+*/
 func (cl *MongoClient) SetRoot(id string) error {
 	session := cl.ms.Copy()
 	defer session.Close()
 	collection := session.DB(cl.dbName).C(cl.colName)
 
 	var root UserDAO
-	err := collection.FindId(rootId).One(&root)
+	err := collection.FindId(rootID).One(&root)
 	if err != nil {
 		if err != mgo.ErrNotFound {
 			return err
 		}
 	}
-	_, err = collection.UpsertId(rootId, &UserDAO{ID: rootId, LeftID: id})
+	_, err = collection.UpsertId(rootID, &UserDAO{ID: rootID, LeftID: id})
 	return err
 }
 
-func (cl *MongoClient) RemoveUserById(id string) error {
+/*
+RemoveUserByID removes the user with given id
+*/
+func (cl *MongoClient) RemoveUserByID(id string) error {
 	session := cl.ms.Copy()
 	defer session.Close()
 	collection := session.DB(cl.dbName).C(cl.colName)

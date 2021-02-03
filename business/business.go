@@ -8,16 +8,27 @@ import (
 	"github.com/oguzhn/PlayerRankingService/models"
 )
 
+/*
+Business represents the business layer of our app. All use cases are handled in this layer.
+*/
 type Business struct {
 	handler database.IDatabase
 }
 
+/*
+NewBusiness defines a new business object with given database handler.
+*/
 func NewBusiness(handler database.IDatabase) *Business {
 	return &Business{handler: handler}
 }
 
+/*
+AddScore updates the score of a user. It first fetches the user with id. Then it deletes the node.
+After that it updates whole tree so that it stay as a binary search tree. Then it insert the user with
+updated score.
+*/
 func (b *Business) AddScore(score models.ScoreDTO) error {
-	user, err := b.handler.GetUserById(score.ID)
+	user, err := b.handler.GetUserByID(score.ID)
 	if err != nil {
 		log.Println(err)
 		return err
@@ -44,7 +55,7 @@ func (b *Business) AddScore(score models.ScoreDTO) error {
 			if err != nil {
 				return err
 			}
-			userRight, err := b.handler.GetUserById(root.RightID)
+			userRight, err := b.handler.GetUserByID(root.RightID)
 			if err != nil {
 				return err
 			}
@@ -56,12 +67,12 @@ func (b *Business) AddScore(score models.ScoreDTO) error {
 				return err
 			}
 
-			leftUser, err := b.handler.GetUserById(left)
+			leftUser, err := b.handler.GetUserByID(left)
 			if err != nil {
 				return err
 			}
 
-			rootsLeft, err := b.handler.GetUserById(root.LeftID)
+			rootsLeft, err := b.handler.GetUserByID(root.LeftID)
 			if err != nil {
 				return err
 			}
@@ -77,7 +88,7 @@ func (b *Business) AddScore(score models.ScoreDTO) error {
 				if err != nil {
 					return err
 				}
-				rootsLeft, err = b.handler.GetUserById(rootsLeft.RightID)
+				rootsLeft, err = b.handler.GetUserByID(rootsLeft.RightID)
 				if err != nil {
 					return err
 				}
@@ -100,7 +111,7 @@ func (b *Business) AddScore(score models.ScoreDTO) error {
 			} else {
 				parent.RightID = user.LeftID
 				parent.RightCount--
-				b.decrementUpperNodesRightCount(parent)
+				// b.decrementUpperNodesRightCount(parent)
 			}
 			err = b.handler.UpdateUser(parent)
 			if err != nil {
@@ -112,7 +123,7 @@ func (b *Business) AddScore(score models.ScoreDTO) error {
 			} else {
 				parent.RightID = user.RightID
 				parent.RightCount--
-				b.decrementUpperNodesRightCount(parent)
+				// b.decrementUpperNodesRightCount(parent)
 			}
 			err = b.handler.UpdateUser(parent)
 			if err != nil {
@@ -122,7 +133,7 @@ func (b *Business) AddScore(score models.ScoreDTO) error {
 			if !isLeftChild {
 				parent.RightID = user.RightID
 				parent.RightCount--
-				b.decrementUpperNodesRightCount(parent)
+				// b.decrementUpperNodesRightCount(parent)
 			} else {
 				parent.LeftID = user.RightID
 			}
@@ -130,7 +141,7 @@ func (b *Business) AddScore(score models.ScoreDTO) error {
 			if err != nil {
 				return err
 			}
-			userRight, err := b.handler.GetUserById(user.RightID)
+			userRight, err := b.handler.GetUserByID(user.RightID)
 			if err != nil {
 				return err
 			}
@@ -142,12 +153,12 @@ func (b *Business) AddScore(score models.ScoreDTO) error {
 				return err
 			}
 
-			leftUser, err := b.handler.GetUserById(left)
+			leftUser, err := b.handler.GetUserByID(left)
 			if err != nil {
 				return err
 			}
 
-			usersLeft, err := b.handler.GetUserById(user.LeftID)
+			usersLeft, err := b.handler.GetUserByID(user.LeftID)
 			if err != nil {
 				return err
 			}
@@ -163,7 +174,7 @@ func (b *Business) AddScore(score models.ScoreDTO) error {
 				if err != nil {
 					return err
 				}
-				usersLeft, err = b.handler.GetUserById(usersLeft.RightID)
+				usersLeft, err = b.handler.GetUserByID(usersLeft.RightID)
 				if err != nil {
 					return err
 				}
@@ -175,9 +186,10 @@ func (b *Business) AddScore(score models.ScoreDTO) error {
 				return err
 			}
 		}
+		b.decrementUpperNodesRightCount(parent)
 	}
 
-	err = b.handler.RemoveUserById(user.ID)
+	err = b.handler.RemoveUserByID(user.ID)
 	if err != nil {
 		return err
 	}
@@ -199,12 +211,12 @@ func (b *Business) decrementUpperNodesRightCount(user *database.UserDAO) error {
 		if user.Score >= p.Score {
 			p.RightCount--
 			b.handler.UpdateUser(p)
-			p, err = b.handler.GetUserById(p.RightID)
+			p, err = b.handler.GetUserByID(p.RightID)
 			if err != nil {
 				return err
 			}
 		} else {
-			p, err = b.handler.GetUserById(p.LeftID)
+			p, err = b.handler.GetUserByID(p.LeftID)
 			if err != nil {
 				return err
 			}
@@ -217,22 +229,23 @@ func (b *Business) countNumberOfNodes(root *database.UserDAO) (int, error) {
 		return 0, nil
 	}
 
-	var rightUser *database.UserDAO
-	var err error
-	if root.RightID != "" {
-		rightUser, err = b.handler.GetUserById(root.RightID)
-		if err != nil {
-			return 0, err
-		}
-	}
-	right, err := b.countNumberOfNodes(rightUser)
-	if err != nil {
-		return 0, err
-	}
+	// var rightUser *database.UserDAO
+	// var err error
+	// if root.RightID != "" {
+	// 	rightUser, err = b.handler.GetUserByID(root.RightID)
+	// 	if err != nil {
+	// 		return 0, err
+	// 	}
+	// }
+	// right, err := b.countNumberOfNodes(rightUser)
+	// if err != nil {
+	// 	return 0, err
+	// }
 
+	var err error
 	var leftUser *database.UserDAO
 	if root.LeftID != "" {
-		leftUser, err = b.handler.GetUserById(root.LeftID)
+		leftUser, err = b.handler.GetUserByID(root.LeftID)
 		if err != nil {
 			return 0, err
 		}
@@ -242,7 +255,7 @@ func (b *Business) countNumberOfNodes(root *database.UserDAO) (int, error) {
 		return 0, err
 	}
 
-	return right + left + 1, nil
+	return root.RightCount + left, nil
 }
 
 func (b *Business) findParentUser(user *database.UserDAO) (*database.UserDAO, bool, error) { //bool is to determine if it is left or right of parent. return true if it is left
@@ -256,12 +269,12 @@ func (b *Business) findParentUser(user *database.UserDAO) (*database.UserDAO, bo
 			return p, p.LeftID == user.ID, nil //return true if it is left
 		}
 		if user.Score >= p.Score {
-			p, err = b.handler.GetUserById(p.RightID)
+			p, err = b.handler.GetUserByID(p.RightID)
 			if err != nil {
 				return nil, false, err
 			}
 		} else {
-			p, err = b.handler.GetUserById(p.LeftID)
+			p, err = b.handler.GetUserByID(p.LeftID)
 			if err != nil {
 				return nil, false, err
 			}
@@ -271,7 +284,7 @@ func (b *Business) findParentUser(user *database.UserDAO) (*database.UserDAO, bo
 }
 
 func (b *Business) CreateUser(user models.UserDTO) error {
-	_, err := b.handler.GetUserById(user.ID) //check if its id already exists on db before creating new user
+	_, err := b.handler.GetUserByID(user.ID) //check if its id already exists on db before creating new user
 	if err == nil {
 		return errors.New("Same id already created for another user")
 	}
@@ -301,7 +314,7 @@ func (b *Business) CreateUser(user models.UserDTO) error {
 				return err
 			}
 			if p.RightID != "" {
-				p, err = b.handler.GetUserById(p.RightID)
+				p, err = b.handler.GetUserByID(p.RightID)
 				if err != nil {
 					log.Println(err)
 					return err
@@ -323,7 +336,7 @@ func (b *Business) CreateUser(user models.UserDTO) error {
 			}
 		} else {
 			if p.LeftID != "" {
-				p, err = b.handler.GetUserById(p.LeftID)
+				p, err = b.handler.GetUserByID(p.LeftID)
 				if err != nil {
 					log.Println(err)
 					return err
@@ -375,7 +388,7 @@ func (b *Business) bstTraverse(root *database.UserDAO) (models.UserDTOList, erro
 	resultList := models.UserDTOList{}
 
 	if root.RightID != "" {
-		rightUser, err := b.handler.GetUserById(root.RightID)
+		rightUser, err := b.handler.GetUserByID(root.RightID)
 		if err != nil {
 			return resultList, err
 		}
@@ -387,7 +400,7 @@ func (b *Business) bstTraverse(root *database.UserDAO) (models.UserDTOList, erro
 	}
 	resultList = append(resultList, migrateDbModelToModel(*root))
 	if root.LeftID != "" {
-		leftUser, err := b.handler.GetUserById(root.LeftID)
+		leftUser, err := b.handler.GetUserByID(root.LeftID)
 		if err != nil {
 			return resultList, err
 		}
@@ -401,7 +414,7 @@ func (b *Business) bstTraverse(root *database.UserDAO) (models.UserDTOList, erro
 }
 
 func (b *Business) GetUserById(id string) (models.UserDTO, error) {
-	user, err := b.handler.GetUserById(id)
+	user, err := b.handler.GetUserByID(id)
 	if err != nil {
 		log.Println(err)
 		return models.UserDTO{}, err
@@ -418,14 +431,14 @@ func (b *Business) GetUserById(id string) (models.UserDTO, error) {
 	p := root
 	for p.ID != userDTO.ID {
 		if userDTO.Score >= p.Score {
-			p, err = b.handler.GetUserById(p.RightID)
+			p, err = b.handler.GetUserByID(p.RightID)
 			if err != nil {
 				log.Println(err)
 				return userDTO, err
 			}
 		} else {
 			rank += p.RightCount
-			p, err = b.handler.GetUserById(p.LeftID)
+			p, err = b.handler.GetUserByID(p.LeftID)
 			if err != nil {
 				log.Println(err)
 				return userDTO, err
