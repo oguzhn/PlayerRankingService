@@ -24,10 +24,10 @@ func main() {
 	var conf struct {
 		Mongo struct {
 			Addr string `required:"true"`
-			DB   string `required:"true"`
-			Col  string `required:"true"`
+			DB   string `default:"RankingDb"`
+			Col  string `default:"Players"`
 		}
-		Addr string `required:"true"`
+		Addr string `default:":8080"`
 	}
 
 	err := envconfig.Process(envPrefix, &conf)
